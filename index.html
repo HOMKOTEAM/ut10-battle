@@ -1,362 +1,489 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en-us">
   <head>
+    <script src="coi-serviceworker.js"></script>
     <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#000000">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>UNDERTALE 10th Anniversary</title>
+    <style>
+      html {
+        background: #000000;
+      }
 
-<title>UNDERTALE for Nintendo Switch, PC / Mac, PlayStation, and Xbox</title>
+      body {
+        font-family: arial;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        min-height: fill-available;
+        min-height: 100svh; /* Otherwise contents can be covered by an address bar in Safari on iOS 15 */
+        min-width: 100vw;
+        background: #000000;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        place-items: center;
+      }
 
-<meta property="og:site_name" content="UNDERTALE">
-<meta property="og:title" content="UNDERTALE for Nintendo Switch, PC / Mac, PlayStation, and Xbox">
-<meta property="twitter:title" content="UNDERTALE for Nintendo Switch, PC / Mac, PlayStation, and Xbox">
-<meta property="og:locale" content="en_US">
-<meta name="description" content="UNDERTALE! The RPG game where you don't have to destroy anyone.">
-<meta property="og:description" content="UNDERTALE! The RPG game where you don't have to destroy anyone.">
-<link rel="canonical" href="https://UNDERTALE.com">
-<meta property="og:url" content="https://UNDERTALE.com">
+      .emscripten {
+        padding-right: 0;
+        display: block;
+      }
 
-<meta property="og:image" content="https://UNDERTALE.com/assets/images/social-logo.png">
-<meta property="twitter:image" content="https://UNDERTALE.com/assets/images/social-logo.png">
-<meta property="og:type" content="article">
-<meta property="article:published_time" content="2026-07-09T04:54:36+00:00">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:site" content="@undertale">
+      div.emscripten {
+        text-align: center;
+      }
 
-<link rel="stylesheet" href="/_bridgetown/static/index.FNYW2DMG.css" />
-<script src="/_bridgetown/static/index.JTIBC4WH.js" defer></script>
+      .nsmessage {
+        padding-right: 0;
+        display: inline-block;
+        vertical-align: top;
+        font-weight: bold;
+        color: white;
+      }
 
+      div.nsmessage {
+        text-align: center;
+      }
 
-    
+      /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+      canvas.emscripten {
+        display: none;
+        border: 0px none;
+        outline: none;
+        background-color: black;
+        position: relative;
+        opacity: 0;
+        margin-top: auto;
+        margin-bottom: auto;
+        image-rendering: optimizeSpeed;             /* Older versions of FF          */
+        image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+        image-rendering: -webkit-optimize-contrast; /* Safari                        */
+        image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+        image-rendering: pixelated;                 /* Awesome future-browsers       */
+        -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+      }
+
+      canvas.active {
+        opacity: 1;
+      }
+
+      canvas.paused {
+      }
+
+      canvas.unpaused {
+        animation-name: none;
+      }
+
+      #status {
+        display: inline-block;
+        vertical-align: top;
+        font-weight: bold;
+        color: white;
+      }
+
+      div.loading {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+      }
+      div.loading > * {
+        padding: 10px;
+        margin: 10px;
+      }
+
+      .labels {
+        font-size: 4px;
+      }
+
+      .label-title {
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 4px;
+      }
+    </style>
   </head>
-  <body class="default  bg-black" data-controller="scroll">
-    <nav class="w-full z-40 overflow-hidden bg-nav-grey">
-  <div class="relative w-full">
-    <ul class="flex items-center justify-between w-full max-w-2xl mx-auto gap-4 md:gap-12 h-12 pr-[96px] md:pr-0 pl-2 md:pl-0 font-8bit uppercase">
-      <li>
-        <a class="px-2 transition-opacity text-nav-less-grey hover:opacity-80 hover:duration-0 duration-150 inline-block text-center text-xs sm:text-sm md:text-lg drop-shadow-[2px_2px_0px_rgba(0,0,0)]" href="/about">About</a>
-      </li>
-      
-      <li>
-        <a class="px-2 transition-opacity text-nav-less-grey hover:opacity-80 hover:duration-0 duration-150 inline-block text-center text-xs sm:text-sm md:text-lg drop-shadow-[2px_2px_0px_rgba(0,0,0)]" href="/demo">Demo</a>
-      </li>
-      
-      <li>
-        <a class="px-2 transition-opacity text-nav-less-grey hover:opacity-80 hover:duration-0 duration-150 inline-block text-center text-xs sm:text-sm md:text-lg drop-shadow-[2px_2px_0px_rgba(0,0,0)]" href="https://www.fangamer.com/collections/UNDERTALE" target="_blank">Merch</a>
-      </li>
-      <li>
-        <a class="px-2 transition-opacity text-nav-less-grey hover:opacity-80 hover:duration-0 duration-150 inline-block text-center text-xs sm:text-sm md:text-lg drop-shadow-[2px_2px_0px_rgba(0,0,0)]" href="/help">FAQ / Contact</a>
-      </li>
-    </ul>
-    <div class="absolute right-2 top-[11px] z-50">
-      <ul id="regions" class="relative flex gap-2 self-end">
-        <li>
-          <a href="https://undertale.com" class="transition-opacity hover:opacity-80 hover:duration-0 duration-150"><img alt="US English Version" src="/assets/images/flag-us.png" /></a>
-        </li>
-        <li>
-          <a href="https://undertale.jp" class="transition-opacity hover:opacity-80 hover:duration-0 duration-150"><img alt="JP 日本語 Version" src="/assets/images/flag-jp.png" /></a>
-        </li>
-      </ul>
+
+  <body>
+    <canvas
+      class="emscripten"
+      id="canvas"
+      oncontextmenu="event.preventDefault()"
+      onclick="resume()"
+      tabindex="-1"
+    >
+    </canvas>
+    <div class="loading">
+      <noscript class="nsmessage">This requires JavaScript and WebAssembly to be enabled in your browser.</noscript>
+      <div class="emscripten" id="status">Loading...</div>
     </div>
-  </div>
-</nav>
 
+    <script id="tick-worker" type="javascript/worker">
+      let running = false;
+      let stop_called = false;
 
-    <main class="min-h-screen pb-16 px-4">
-      <div class="flex flex-col gap-16 max-w-2xl mx-auto mt-16">
-  <h1><img src="/assets/images/logo.png" alt="UNDERTALE" width="696" height="67" /></h1>
+      let intervalMs = 16;
 
-  <section id="game" class="container mx-auto max-w-2xl text-center text-white flex flex-col gap-4 px-4" data-controller="game">
-    
-    <div class="mx-auto max-w-lg mb-12">
-      <a class="flex flex-col gap-2 mx-auto p-4 text-white font-pixel text-xl rounded bg-undertale-blue/30 transition-colors duration-100 hover:bg-undertale-blue/40" href="/10">
-        <img class="w-48 mx-auto" src="/assets/images/ut10-logo.png" alt="UNDERTALE 10th Anniversary" width="192" height="192" />
-        <h2><br/>10th Anniversary<br/><strong class="text-undertale-yellow">STREAM EVENT</strong><br/><small>Raised $361,407.76 for MSF!</small></h2>
-      </a>
-    </div>
-    
-    <h3 class="font-pixel text-2xl text-white">GAME<br/>AVAILABLE ON</h3>
-    
-    <ul class="flex flex-row gap-4 items-center justify-center flex-wrap" role="tablist">
-      <li role="presentation"><button id="switch_button" class="cursor-pointer w-40 border-2 border-undertale-muted bg-[#2b2b2b] px-1 py-2 hover:bg-undertale-gray [&.selected]:bg-undertale-gray selected" role="tab" aria-selected="true" data-game-target="button" data-game-platform-param="switch" data-action="click->game#selectPlatform"><img src="/assets/images/platform-switch.png" alt="Nintendo Switch" /></button></li>
-      <li role="presentation"><button id="pc_button" class="cursor-pointer w-40 border-2 border-undertale-muted bg-[#2b2b2b] px-1 py-2 hover:bg-undertale-gray [&.selected]:bg-undertale-gray" role="tab" data-game-target="button" data-game-platform-param="pc" data-action="click->game#selectPlatform"><img src="/assets/images/platform-pc.png" alt="PC" /></button></li>
-      <li role="presentation"><button id="ps4_button" class="cursor-pointer w-40 border-2 border-undertale-muted bg-[#2b2b2b] px-1 py-2 hover:bg-undertale-gray [&.selected]:bg-undertale-gray" role="tab" data-game-target="button" data-game-platform-param="ps4" data-action="click->game#selectPlatform"><img src="/assets/images/platform-ps4.png" alt="PlayStation 4" /></button></li>
-      <li role="presentation"><button id="vita_button" class="cursor-pointer w-40 border-2 border-undertale-muted bg-[#2b2b2b] px-1 py-2 hover:bg-undertale-gray [&.selected]:bg-undertale-gray" role="tab" data-game-target="button" data-game-platform-param="vita" data-action="click->game#selectPlatform"><img src="/assets/images/platform-psvita.png" alt="PlayStation Vita" /></button></li>
-      <li role="presentation"><button id="xbox_button" class="cursor-pointer w-40 border-2 border-undertale-muted bg-[#2b2b2b] px-1 py-2 hover:bg-undertale-gray [&.selected]:bg-undertale-gray" role="tab" data-game-target="button" data-game-platform-param="xbox" data-action="click->game#selectPlatform"><img src="/assets/images/platform-xbox.png" alt="Xbox" /></button></li>
-    </ul>
-    <div id="switch" class="flex flex-col gap-6 w-full p-4 font-pixel text-white" style="background: url('/assets/images/bg-dotmatrix.png') #e5141f repeat-x; background-position-y: bottom" role="tabpanel" data-game-target="platform">
-      <div class="flex md:flex-row flex-col gap-4 items-center justify-between">
-        <img alt="UNDERTALE on Nintendo Switch" src="/assets/images/game-switch-se.png" class="w-32 shrink-0" />
-        <div class="flex flex-col gap-4 text-sm">
-          <p class="uppercase">Digital edition<br/>available on</p>
-          <a href="https://www.nintendo.com/games/detail/undertale-switch" target="_blank" class="h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-nintendo.png" alt="Nintendo eShop" class="h-full object-contain" /></a>
-        </div>
-        <div class="flex flex-col gap-4 text-sm">
-          <p class="uppercase">Physical edition<br/>available on</p>
-          <div class="flex gap-1">
-            <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-full object-contain" /></a>
-            <a href="https://www.bestbuy.com/site/undertale-nintendo-switch/6288633.p?skuId=6288633" target="_blank" class="h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-bestbuy.png" alt="Best Buy" class="h-full object-contain" /></a>
-          </div>
-        </div>
-      </div>
-      <div class="flex flex-row gap-4 items-center justify-center text-center">
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-        <p class="text-2xl">COLLECTOR'S EDITION</p>
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-      </div>
-      <div class="flex flex-col items-center justify-center gap-4">
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank"><img alt="Collector's Edition for Nintendo Switch" src="/assets/images/game-switch-ce.png" /></a>
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="flex flex-col gap-1 items-center justify-center h-20 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><span class="text-xs">ONLY ON</span><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-12 -mt-3 object-contain" /></a>
-      </div>
-    </div>
-    <div id="pc" class="flex flex-col gap-6 w-full p-4 font-pixel text-white hidden" style="background: url('/assets/images/bg-dotmatrix.png') #747474 repeat-x; background-position-y: bottom" role="tabpanel" data-game-target="platform">
-      <div class="flex md:flex-row flex-col gap-4 items-center justify-between">
-        <img alt="UNDERTALE on PC" src="/assets/images/game-pc-se.png" class="w-32 shrink-0" />
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-4 text-sm">
-            <p class="uppercase">Digital edition<br/>available on</p>
-            <div class="flex flex-wrap gap-1 items-center justify-center">
-              <a href="https://store.steampowered.com/app/391540" target="_blank" class="h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-steam.png" alt="Steam" class="h-full object-contain" /></a>
-              <a href="https://www.humblebundle.com/store/undertale" target="_blank" class="h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-humble.png" alt="Steam" class="h-full object-contain" /></a>
-              <a href="https://www.gog.com/game/undertale" target="_blank" class="h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-gog.png" alt="GoG" class="h-full object-contain" /></a>
-              <a href="https://www.microsoft.com/en-us/p/undertale/9n046hwgq4j2" target="_blank" class="h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-microsoft.png" alt="Microsoft" class="h-full object-contain" /></a>
-            </div>
-          </div>
-          <div class="flex flex-col gap-4 text-sm items-center justify-center">
-            <p class="uppercase">Physical edition<br/>available on</p>
-            <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="w-fit h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-full object-contain" /></a>
-          </div>
-        </div>
-      </div>
-      <div class="flex flex-row gap-4 items-center justify-center text-center">
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-        <p class="text-2xl">COLLECTOR'S EDITION</p>
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-      </div>
-      <div class="flex flex-col items-center justify-center gap-4">
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank"><img alt="Collector's Edition for PC" src="/assets/images/game-pc-ce.png" /></a>
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="flex flex-col gap-1 items-center justify-center h-20 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><span class="text-xs">ONLY ON</span><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-12 -mt-3 object-contain" /></a>
-      </div>
-    </div>
-    <div id="ps4" class="flex flex-col gap-6 w-full p-4 font-pixel text-white hidden" style="background: url('/assets/images/bg-dotmatrix.png') #297ca8 repeat-x; background-position-y: bottom" role="tabpanel" data-game-target="platform">
-      <div class="flex md:flex-row flex-col gap-4 items-center justify-between">
-        <img alt="UNDERTALE on PlayStation 4" src="/assets/images/game-ps4-se.png" class="w-32 shrink-0" />
-        <div class="flex flex-col gap-4 text-sm items-center justify-center">
-          <p class="uppercase">Cross-buy the digital edition<br/>for PS4™ and PSVita™</p>
-          <a href="https://store.playstation.com/en-us/product/UP3893-CUSA08801_00-TFSHVCUTPS400084" target="_blank" class="w-fit h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-playstation.png" alt="PlayStation Store" class="h-full object-contain" /></a>
-        </div>
-        <div class="flex flex-col gap-4 text-sm items-center justify-center">
-          <p class="uppercase">Physical edition<br/>available on</p>
-          <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="w-fit h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-full object-contain" /></a>
-        </div>
-      </div>
-      <div class="flex flex-row gap-4 items-center justify-center text-center">
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-        <p class="text-2xl">COLLECTOR'S EDITION</p>
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-      </div>
-      <div class="flex flex-col items-center justify-center gap-4">
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank"><img alt="Collector's Edition for PlayStation 4" src="/assets/images/game-ps4-ce.png" /></a>
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="flex flex-col gap-1 items-center justify-center h-20 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><span class="text-xs">ONLY ON</span><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-12 -mt-3 object-contain" /></a>
-      </div>
-    </div>
-    <div id="vita" class="flex flex-col gap-6 w-full p-4 font-pixel text-white hidden" style="background: url('/assets/images/bg-dotmatrix.png') #297ca8 repeat-x; background-position-y: bottom" role="tabpanel" data-game-target="platform">
-      <div class="flex md:flex-row flex-col gap-4 items-center justify-between">
-        <img alt="UNDERTALE on PlayStation Vita" src="/assets/images/game-psvita-se.png" class="w-32 shrink-0" />
-        <div class="flex flex-col gap-4 text-sm items-center justify-center">
-          <p class="uppercase">Cross-buy the digital edition<br/>for PS4™ and PSVita™</p>
-          <a href="https://store.playstation.com/en-us/product/UP3893-CUSA08801_00-TFSHVCUTPS400084" target="_blank" class="w-fit h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-playstation.png" alt="PlayStation Store" class="h-full object-contain" /></a>
-        </div>
-        <div class="flex flex-col gap-4 text-sm items-center justify-center">
-          <p class="uppercase">Physical edition<br/>available on</p>
-          <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="w-fit h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-full object-contain" /></a>
-        </div>
-      </div>
-      <div class="flex flex-row gap-4 items-center justify-center text-center">
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-        <p class="text-2xl">COLLECTOR'S EDITION</p>
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-      </div>
-      <div class="flex flex-col items-center justify-center gap-4">
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank"><img alt="Collector's Edition for PlayStation Vita" src="/assets/images/game-psvita-ce.png" /></a>
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="flex flex-col gap-1 items-center justify-center h-20 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><span class="text-xs">ONLY ON</span><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-12 -mt-3 object-contain" /></a>
-      </div>
-    </div>
-    <div id="xbox" class="flex flex-col gap-6 w-full p-4 font-pixel text-white hidden" style="background: url('/assets/images/bg-dotmatrix.png') #107c10 repeat-x; background-position-y: bottom" role="tabpanel" data-game-target="platform">
-      <div class="flex md:flex-row flex-col gap-4 items-center justify-between">
-        <img alt="UNDERTALE on Xbox One" src="/assets/images/game-xbox-se.png" class="w-32 shrink-0" />
-        <div class="flex flex-col gap-4 text-sm items-center justify-center">
-          <p class="uppercase">Play the digital edition<br/>on Xbox Series X,<br/>Xbox Series S,<br/>and Xbox One</p>
-          <a href="https://www.microsoft.com/en-us/store/r/undertale/9pjggx9xjxpb" target="_blank" class="w-fit h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/platform-xbox.png" alt="Xbox" class="h-full object-contain" /></a>
-        </div>
-        <div class="flex flex-col gap-4 text-sm items-center justify-center">
-          <p class="uppercase">Physical edition<br/>available on</p>
-          <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="w-fit h-12 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-full object-contain" /></a>
-        </div>
-      </div>
-      <div class="flex flex-row gap-4 items-center justify-center text-center">
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-        <p class="text-2xl">COLLECTOR'S EDITION</p>
-        <div class="hidden md:block h-[2px] bg-white grow" aria-hidden="true"></div>
-      </div>
-      <div class="flex flex-col items-center justify-center gap-4">
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank"><img alt="Collector's Edition for Xbox One" src="/assets/images/game-xbox-ce.png" /></a>
-        <a href="https://www.fangamer.com/products/undertale-game-switch-ps4-vita" target="_blank" class="flex flex-col gap-1 items-center justify-center h-20 border-3 border-white bg-white/20 hover:bg-white/40 p-2 rounded-lg"><span class="text-xs">ONLY ON</span><img src="/assets/images/store-fangamer.png" alt="Fangamer" class="h-12 -mt-3 object-contain" /></a>
-      </div>
-    </div>
-    
-  </section>
+      onmessage = (e) => {
+        if (e.data.run) {
+          intervalMs = Math.floor(1000 / e.data.fps);
 
-  <section id="news" class="container mx-auto max-w-2xl text-center text-white flex flex-col gap-4 px-4">
-    <h2 class="text-white text-2xl uppercase font-pixel">News and Updates</h2>
-    <div class="max-w-lg mx-auto flex flex-col items-center justify-center gap-4 py-4 px-6 bg-undertale-blue/30 mb-4 rounded-lg">
-      <p class="font-pixel text-white">Subscribe for free e-mail updates no matter what happens to any website on the internet!</p>
-      <a href="/newsletter" class="inline-block border-2 border-white px-4 py-2 font-pixel rounded-lg text-white text-xl duration-150 transition-colors hover:duration-0 hover:bg-white/20 hover:border-undertale-yellow">DELTARUNE / UNDERTALE<br/><span class="text-undertale-yellow">MAILING LIST</span></a>
-      <div class="flex gap-4">
-        <a class="flex items-center justify-center border-2 border-white py-2 px-3 rounded-lg duration-150 transition-colors hover:duration-0 hover:bg-white/20 hover:border-undertale-yellow" href="https://bsky.app/profile/undertale.com" target="_blank"><img class="fill-white w-6 h-6 text-transparent" src="/assets/images/social-bluesky.svg" alt="undertale.com on Bluesky" /></a>
-        <a class="flex items-center justify-center border-2 border-white py-2 px-3 rounded-lg duration-150 transition-colors hover:duration-0 hover:bg-white/20 hover:border-undertale-yellow" href="https://twitter.com/undertale" target="_blank"><img class="fill-white w-6 h-6 text-transparent" src="/assets/images/social-twitter.svg" alt="undertale on X / Twitter" /></a>
-      </div>
-    </div>
-    <div class="flex flex-col gap-4 max-w-lg mx-auto">
+          if (!running) {
+            running = true;
+            setTimeout(tick, intervalMs);
+          }
+        } else {
+          stop_called = true;
+        }
+      }
+
+      const tick = () => {
+        if (stop_called) {
+          stop_called = false;
+          running = false;
+
+          return;
+        }
+
+        const start = new Date().getTime();
+        postMessage('');
+        const end = new Date().getTime();
+
+        let next_update = start + intervalMs - end;
+        next_update = Math.max(next_update, 0);
+        setTimeout(tick, next_update);
+      }
+    </script>
+
+    <script type="text/javascript">
+      const blob = new Blob([document.querySelector('#tick-worker').textContent]);
+      const worker = new Worker(window.URL.createObjectURL(blob));
+
+      worker.onmessage = function () {
+        GM_tick(performance.now());
+      }
       
+      if ("getGamepads" in navigator) {
+        const sendGamepadInfo = (id) => {
+          const firefoxRegex = /^([0-9a-fA-F]{4})-([0-9a-fA-F]{4})-(.*)$/;
+          const chromeRegex = /^(.*) ?\(.*[vV][eE][nN][dD][oO][rR]: ?([0-9a-fA-F]{4}).*[pP][rR][oO][dD][uU][cC][tT]: ?([0-9a-fA-F]{4})\)$/;
+          
+          let name = undefined;
+          let vendor = undefined;
+          let product = undefined;
+          const firefoxMatch = id.match(firefoxRegex);
+          if (firefoxMatch) {
+            name = firefoxMatch[3];
+            vendor = firefoxMatch[1];
+            product = firefoxMatch[2];
+          } else {
+            const chromeMatch = id.match(chromeRegex);
+            if (chromeMatch) {
+              name = chromeMatch[1];
+              vendor = chromeMatch[2];
+              product = chromeMatch[3];
+            }
+          }
+          
+          if (!name) {
+            name = "";
+          }
+          if (!vendor) {
+            vendor = "";
+          }
+          if (!product) {
+            product = "";
+          }
+          name = name.toLowerCase();
+          vendor = vendor.toLowerCase();
+          product = product.toLowerCase();
+          
+          let ps = false;
+          let dualsense = false;
+          if (name.includes("dualsense") || name.includes("ps5")) {
+            ps = true;
+            dualsense = true;
+          } else if (vendor == "054c" || 
+                     name.includes("playstation") || name.includes("dualshock") ||
+                     name.includes("ps1") || name.includes("ps2") || 
+                     name.includes("ps3") || name.includes("ps4")) {
+            ps = true;
+          }
+          const dataToSend = { gamepadIsPlaystation: ps, gamepadIsDualsense: dualsense };
+          window.postMessage(dataToSend);
+        };
       
-      <a href="/newsletter" class="flex flex-row gap-4 items-center text-left bg-white/10 hover:bg-white/20 motion-safe:transition-all duration-150 hover:duration-0 border-2 border-white rounded-lg p-4 hover:border-undertale-yellow">
-  
-  <img src="/assets/images/thumb-archive.png" alt="Newsletter Archive" class="flex-shrink-0 w-24 h-24 object-contain rounded" loading="lazy" aria-hidden="true" />
-  
-
-  <div class="flex flex-col">
-    <p class="text-xl font-pixel text-undertale-yellow">UNDERTALE / DELTARUNE</p>
-    <h5 class="text-xl font-pixel text-white">Newsletter Archive</h5>
-    
-    <p class="text-sm font-pixel text-undertale-muted mt-1">2022 —</p>
-  </div>
-</a>
-
+        window.addEventListener("gamepadconnected", (event) => {
+          const id = event.gamepad.id;
+          console.log("Gamepad connected with ID: " + id);
+          sendGamepadInfo(id);
+        });
+        
+        setInterval(() => {
+          const gamepads = navigator.getGamepads();
+          let activityDetectedIndex = -1;
+          for (const gp of gamepads) {
+            if (!gp) {
+              continue;
+            }
+            let activityDetected = false;
+            if (gp.mapping !== "standard" || gp.axes.length < 2) {
+              for (let i = 0; i < gp.axes.length; i++) {
+                activityDetected |= Math.abs(gp.axes[i]) >= 0.4;
+              }
+              for (let i = 0; i < gp.buttons.length; i++) {
+                activityDetected |= gp.buttons[i].pressed;
+              }
+            } else {
+              activityDetected |= Math.abs(gp.axes[0]) >= 0.4 || Math.abs(gp.axes[1]) >= 0.4;
+              for (let i = 0; i < gp.buttons.length; i++) {
+                activityDetected |= gp.buttons[i].pressed;
+              }
+            }
+            if (activityDetected) {
+              sendGamepadInfo(gp.id);
+              break;
+            }
+          }
+        }, 16);
+      }
       
-      <a href="/deltarune-update-092021" class="flex flex-row gap-4 items-center text-left bg-white/10 hover:bg-white/20 motion-safe:transition-all duration-150 hover:duration-0 border-2 border-white rounded-lg p-4 hover:border-undertale-yellow">
-  
-  <img src="/assets/images/thumb-ch2-thanks.png" alt="Status Update" class="flex-shrink-0 w-24 h-24 object-contain rounded" loading="lazy" aria-hidden="true" />
-  
+      window.addEventListener("message", (message) => {
+        if (message && message.data === "attempt_enter_fullscreen") {
+          // Attempt entering fullscreen on mobile devices specifically.
+          if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+            // Not supported on mobile Safari, unfortunately, as of writing this.
+            return;
+          }
+          setTimeout(() => {
+            if (document.body.requestFullscreen) {
+              document.body.requestFullscreen();
+            }
+          }, 100);
+        }
+      });
+    </script>
 
-  <div class="flex flex-col">
-    <p class="text-xl font-pixel text-undertale-yellow">DELTARUNE</p>
-    <h5 class="text-xl font-pixel text-white">Status Update</h5>
-    
-    <p class="text-sm font-pixel text-undertale-muted mt-1">2021</p>
-  </div>
-</a>
-
+    <script type="text/javascript">
+      var bodyElement = document.getElementsByTagName("body")[0];
+      var statusElement = document.getElementById("status");
+      var canvasElement = document.getElementById("canvas");
+      canvasElement.addEventListener("click", function() { canvasElement.focus(); });
       
-      <a href="https://line.me/S/sticker/16707223" target="_blank" class="flex flex-row gap-4 items-center text-left bg-white/10 hover:bg-white/20 motion-safe:transition-all duration-150 hover:duration-0 border-2 border-white rounded-lg p-4 hover:border-undertale-yellow">
-  
-  <img src="/assets/images/stickers3.png" alt="LINE Stickers: Volume 3 is here!" class="flex-shrink-0 w-24 h-24 object-contain rounded" loading="lazy" aria-hidden="true" />
-  
-
-  <div class="flex flex-col">
-    <p class="text-xl font-pixel text-undertale-yellow">UNDERTALE</p>
-    <h5 class="text-xl font-pixel text-white">LINE Stickers: Volume 3 is here!</h5>
-    
-    <p class="text-sm font-pixel text-undertale-muted mt-1">2020</p>
-  </div>
-</a>
-
+      // Prevent GameMaker from changing window title erroneously.
+      var actualDocumentTitle = document.title;
+      Object.defineProperty(document, "title", {
+        set: function(val) {},
+        get: function() { return actualDocumentTitle; }
+      });
       
-      <a href="/deltarune-update-092020" class="flex flex-row gap-4 items-center text-left bg-white/10 hover:bg-white/20 motion-safe:transition-all duration-150 hover:duration-0 border-2 border-white rounded-lg p-4 hover:border-undertale-yellow">
-  
-  <img src="/assets/images/thumb-ch2.png" alt="Status Update" class="flex-shrink-0 w-24 h-24 object-contain rounded" loading="lazy" aria-hidden="true" />
-  
+      var startingHeight, startingWidth;
+      var startingAspect;
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function () {
+          return function (text) {
+            if (arguments.length > 1)
+              text = Array.prototype.slice.call(arguments).join(" ");
+            if (text === "Entering main loop.") {
+              ensureAspectRatio();
+            }
+          };
+        })(),
+        printErr: function (text) {
+          if (arguments.length > 1)
+            text = Array.prototype.slice.call(arguments).join(" ");
+          console.error(text);
+        },
+        canvas: (function () {
+          var canvas = document.getElementById("canvas");
 
-  <div class="flex flex-col">
-    <p class="text-xl font-pixel text-undertale-yellow">DELTARUNE</p>
-    <h5 class="text-xl font-pixel text-white">Status Update</h5>
-    
-    <p class="text-sm font-pixel text-undertale-muted mt-1">2020</p>
-  </div>
-</a>
+          return canvas;
+        })(),
+        setStatus: function (text) {
+          if (!Module.setStatus.last)
+            Module.setStatus.last = { time: Date.now(), text: "" };
+          if (text === Module.setStatus.last.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Module.setStatus.last.time < 30) return;
+		  if (text.includes("Downloading data...")) text = "Downloading data...";
+          Module.setStatus.last.time = now;
+          Module.setStatus.last.text = text;
+          if (m) {
+            text = m[1];
+          } else {
+            if (!text) {
+              canvasElement.style.display = "block";
+            }
+          }
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function (left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(
+            left
+              ? "Preparing... (" +
+                  (this.totalDependencies - left) +
+                  "/" +
+                  this.totalDependencies +
+                  ")"
+              : "All downloads complete."
+          );
+        },
+      };
+      Module.setStatus("Downloading...");
 
+      if (typeof window === "object") {
+        Module['arguments'] = [];
+      }
+
+      var g_pWadLoadCallback = undefined;
+      function setWadLoadCallback( _wadLoadCallback ) 
+      {
+        g_pWadLoadCallback = _wadLoadCallback;
+      }
+
+      var g_pAddAsyncMethod = -1;
+
+      function setAddAsyncMethod( asyncMethod )
+      {
+        g_pAddAsyncMethod = asyncMethod;
+      }
+
+      var g_pJSExceptionHandler = undefined;
+
+      function setJSExceptionHandler( exceptionHandler )
+      {
+        if (typeof exceptionHandler == "function") {
+            g_pJSExceptionHandler = exceptionHandler;
+        } // end if
+      } // end setJSExceptionHandler
+
+      function hasJSExceptionHandler()
+      {
+        return (g_pJSExceptionHandler != undefined) && (typeof g_pJSExceptionHandler == "function");
+      } // end hasJSExceptionHandler
+
+      function doJSExceptionHandler( exceptionJSON )
+      {
+        if (typeof g_pJSExceptionHandler == "function") {
+          var exception = JSON.parse( exceptionJSON );
+          g_pJSExceptionHandler( exception );
+        } // end if
+      } // end doJSExceptionHandler
+
+      function manifestFiles()
+      {
+        return [ "runner.data",
+"runner.js",
+"runner.wasm",
+"audio-worklet.js",
+"game.unx" ].join( ";");
+      }
+
+      function manifestFilesMD5()
+      {
+        return [ "4fcfa3acd68441ef6a5c95bd1e924fd3",
+"b545e69455e5add6925e78db228f0d1a",
+"54facb1a5bb9a9f44824c3a32b9d289f",
+"e8f1e8db8cf996f8715a6f2164c2e44e",
+"983302700fde08ece4f3fd6baa89a876" ];
+      }
+
+      function onFirstFrameRendered()
+      {
+      }
+
+      function onGameSetWindowSize(width,height)
+      {
+          startingHeight = height;
+          startingWidth = width;
+          startingAspect = startingWidth / startingHeight;
+		  ensureAspectRatio();
+      }
+
+      function ensureAspectRatio() {
+        if (canvasElement === undefined) {
+          return;
+        }
+
+        if (startingHeight === undefined && startingWidth === undefined) {
+          return;
+        }
+        
+        canvasElement.classList.add("active");
+
+        const maxWidth = window.innerWidth;
+        const maxHeight = window.innerHeight;
+        var newHeight, newWidth;
+
+        // Find the limiting dimension.
+        var heightQuotient = startingHeight / maxHeight;
+        var widthQuotient = startingWidth / maxWidth;
+
+        if (heightQuotient > widthQuotient) {
+          // Max out on height.
+          newHeight = maxHeight;
+          newWidth = newHeight * startingAspect;
+        } else {
+          // Max out on width.
+          newWidth = maxWidth;
+          newHeight = newWidth / startingAspect;
+        }
+
+        canvasElement.style.height = newHeight + "px";
+        canvasElement.style.width = newWidth + "px";
+      }
+
+      function pause() { // Don't change the name - GX Mobile calls it when the app becomes inactive.
+        if (!canvasElement.classList.contains("active")) { // Wait for the canvas to load.
+          return
+        }
+        
+        GM_pause();
+        canvasElement.classList.add("paused");
+      }
+
+      function resume() {
+        GM_unpause();
+        canvasElement.classList.remove("paused");
+        canvasElement.classList.add("unpaused");
+        ensureAspectRatio();
+      }
+
+      const resizeObserver = new ResizeObserver(() => {
+        window.requestAnimationFrame(ensureAspectRatio);
+        setTimeout(() => window.requestAnimationFrame(ensureAspectRatio), 100);
+      });
+      resizeObserver.observe(document.body);
       
-      <a href="https://line.me/S/sticker/16707223" target="_blank" class="flex flex-row gap-4 items-center text-left bg-white/10 hover:bg-white/20 motion-safe:transition-all duration-150 hover:duration-0 border-2 border-white rounded-lg p-4 hover:border-undertale-yellow">
-  
-  <img src="/assets/images/line.gif" alt="LINE Stickers: Volume 2 is here!" class="flex-shrink-0 w-24 h-24 object-contain rounded" loading="lazy" aria-hidden="true" />
-  
+      setInterval(() => window.requestAnimationFrame(ensureAspectRatio), 1000);
 
-  <div class="flex flex-col">
-    <p class="text-xl font-pixel text-undertale-yellow">UNDERTALE</p>
-    <h5 class="text-xl font-pixel text-white">LINE Stickers: Volume 2 is here!</h5>
-    
-    <p class="text-sm font-pixel text-undertale-muted mt-1">2020</p>
-  </div>
-</a>
+      document.addEventListener("visibilitychange", (event) => {
+        if (document.visibilityState != "visible") {
+          pause();
+        }
+      });
 
-      
-      <a href="https://line.me/S/sticker/13505512" target="_blank" class="flex flex-row gap-4 items-center text-left bg-white/10 hover:bg-white/20 motion-safe:transition-all duration-150 hover:duration-0 border-2 border-white rounded-lg p-4 hover:border-undertale-yellow">
-  
-  <img src="/assets/images/dr-stickers.png" alt="LINE Stickers: Volume 1 is here!" class="flex-shrink-0 w-24 h-24 object-contain rounded" loading="lazy" aria-hidden="true" />
-  
-
-  <div class="flex flex-col">
-    <p class="text-xl font-pixel text-undertale-yellow">DELTARUNE</p>
-    <h5 class="text-xl font-pixel text-white">LINE Stickers: Volume 1 is here!</h5>
-    
-    <p class="text-sm font-pixel text-undertale-muted mt-1">2020</p>
-  </div>
-</a>
-
-      
-      <a href="/alarmclock" class="flex flex-row gap-4 items-center text-left bg-white/10 hover:bg-white/20 motion-safe:transition-all duration-150 hover:duration-0 border-2 border-white rounded-lg p-4 hover:border-undertale-yellow">
-  
-  <img src="/assets/images/thumb-alarmclock.png" alt="5th Anniversary Alarm Clock Winter Dialogue" class="flex-shrink-0 w-24 h-24 object-contain rounded" loading="lazy" aria-hidden="true" />
-  
-
-  <div class="flex flex-col">
-    <p class="text-xl font-pixel text-undertale-yellow">UNDERTALE</p>
-    <h5 class="text-xl font-pixel text-white">5th Anniversary Alarm Clock Winter Dialogue</h5>
-    
-    <p class="text-sm font-pixel text-undertale-muted mt-1">2020</p>
-  </div>
-</a>
-
-      
-    </div>
-  </section>
-
-  
-</div>
-
-
-<section id="deltarune" class="mt-12 p-6 text-xl md:text-4xl font-pixel bg-gradient-to-b from-[#2740AE] to-[#242145]">
-  <a href="https://www.deltarune.com" class="flex flex-col justify-center items-center text-center gap-6 text-white mx-auto max-w-2xl">
-    <p>If you completed UNDERTALE,<br>you may be interested in</p>
-    <img src="/assets/images/deltarune-logo.png" alt="DELTARUNE" />
-    <p>CHAPTERS 1-5<br/><span class="text-undertale-yellow">AVAILABLE NOW ></span></p>
-  </a>
-</section>
-
-
-    </main>
-
-    <footer class="relative w-full py-4 md:pb-6 px-4 text-center bg-nav-grey">
-  <div class="relative container max-w-lg mx-auto text-center flex flex-col items-center justify-center gap-2">
-    <img src="/assets/images/dog.png" alt="Dog" class="z-20 hover:opacity-0 absolute left-4 top-[-66px] w-[50px] h-[50px]" />
-    <img src="/assets/images/dog-bark.png" alt="Dog, barking" class="z-10 absolute left-4 top-[-66px] w-[50px] h-[50px]" aria-hidden="true" />
-    <span class="block text-nav-less-grey font-sans px-4 max-w-lg text-center text-xs">UNDERTALE © Toby Fox 2013-2026. All rights reserved.</span>
-    <span class="block text-nav-less-grey font-sans px-4 max-w-lg text-center text-xs">Steam and the Steam logo are trademarks and/or registered trademarks of Valve Corporation in the U.S. and/or other countries.</span>
-    <span class="block text-nav-less-grey font-sans px-4 max-w-lg text-center text-xs">"PlayStation" and the "PS" Family logo are registered trademarks and "PS4" is a trademark of Sony Interactive Entertainment LLC.</span>
-    
-    <span class="block text-nav-less-grey font-sans px-4 max-w-lg text-center text-xs">Nintendo Switch™ is a trademark of Nintendo.</span>
-    <div class="block border-2 border-white bg-white flex flex-row items-center h-20">
-      <img src="/assets/images/esrb-e10.png" alt="ESRB Everyone 10+ rating" class="shrink-0 h-full" />
-      <div class="px-2 border-y-2 border-r-2 border-black w-full h-full flex items-center">
-        <p class="text-black text-xs">Fantasy Violence<br/>Mild Blood<br/>Mild Language<br/>Use of Tobacco</p>
-      </div>
-    </div>
-    
-    <span class="block text-nav-less-grey font-sans px-4 max-w-lg text-center text-xs"><a href="https://www.fangamer.com/pages/privacy" target="_blank" class="text-nav-less-grey underline hover:opacity-90 !text-xs">Privacy Policy</a></span>
-  </div>
-</footer>
-
-    <script defer>if(!window.plausibleloaded){window.plausibleloaded=true;var onloadfunc = function() {!function(){"use strict";var t=window.location,e=window.document;function a(t,e){t&&console.warn("Ignoring Event: "+t),e&&e.callback&&e.callback()}function n(n,i){if(/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(t.hostname)||"file:"===t.protocol)return a("localhost",i);if(window._phantom||window.__nightmare||window.navigator.webdriver||window.Cypress)return a(null,i);try{if("true"===window.localStorage.plausible_ignore)return a("localStorage flag",i)}catch(r){}var l={},o=(l.n=n,l.u=t.href,l.d="undertale.com",l.r=e.referrer||null,i&&i.meta&&(l.m=JSON.stringify(i.meta)),i&&i.props&&(l.p=i.props),new XMLHttpRequest);o.open("POST","https://plausible.fangamer.eu/api/event",!0),o.setRequestHeader("Content-Type","text/plain"),o.send(JSON.stringify(l)),o.onreadystatechange=function(){4===o.readyState&&i&&i.callback&&i.callback()}}e.currentScript;var i=window.plausible&&window.plausible.q||[];window.plausible=n;for(var r,l=0;l<i.length;l++)n.apply(this,i[l]);function o(){r!==t.pathname&&(r=t.pathname,n("pageview"))};o();}();}; onloadfunc();}</script>
-  
+      setWadLoadCallback(() => {
+      });
+    </script>
+    <script async type="text/javascript" src="runner.js"></script>
   </body>
 </html>
